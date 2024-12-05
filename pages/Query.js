@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Modal, TouchableOpacity, FlatList, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, Modal, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import Voice from 'react-native-voice'; // For voice recognition
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -10,6 +10,7 @@ const Query = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPopup, setShowPopup] = useState(false); // Show popup after response
   const [tagInput, setTagInput] = useState('');
   const [caseData, setCaseData] = useState({
     query: '',
@@ -70,6 +71,9 @@ const Query = () => {
       });
 
       setResponse(data.response || 'No response received');
+
+      // Show popup after receiving a valid response
+      setShowPopup(true);
     } catch (error) {
       console.error('Error fetching the response:', error);
       setError('Error occurred while fetching the response');
@@ -98,198 +102,299 @@ const Query = () => {
   };
 
   const handleSaveCase = async () => {
-    const endpoint = 'https://sih-backend-seven.vercel.app/case_save/';
-    const dataToSend = {
-      caseHeading: caseData.caseHeading,
-      applicableArticle: caseData.applicableArticles,
-      tags: caseData.tags,
-      query: caseData.query,
-      status: caseData.status,
-      description: caseData.description,
-    };
-
     try {
+      const endpoint = 'https://sih-backend-seven.vercel.app/case_save/'; // Replace with your actual endpoint
+      const dataToSend = { ...caseData };
+
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dataToSend),
       });
 
       if (response.ok) {
-        alert('Case saved successfully!');
-        setIsModalOpen(false); // Close modal after success
+        Alert.alert('Case saved successfully!');
+        setIsModalOpen(false);  // Close modal after success
+        setShowPopup(false); // Close popup after saving
       } else {
-        alert('Failed to save the case.');
+        Alert.alert('Failed to save the case.');
       }
     } catch (error) {
-      alert('Error saving the case:', error);
+      Alert.alert('Error saving the case:', error);
     }
   };
 
-  const HowItWorksModal = () => {
+  const renderPopup = () => {
+    if (!showPopup) return null;
+
     return (
-      <Modal visible={isModalOpen} animationType="slide">
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>How It Works</Text>
-          <Text style={styles.modalBody}>
-            Type in any criminal incident, and the model will try to determine the acts and sections applicable to the incident.
-          </Text>
-          <Button title="Close" onPress={() => setIsModalOpen(false)} />
+      <View style={styles.popupContainer}>
+        <TouchableOpacity
+          onPress={() => setIsModalOpen(true)} // Open modal to save case
+          style={styles.popup}
+        >
+          <Text style={styles.popupText}>New case identified! Click to review.</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const renderModal = () => {
+    return (
+      <Modal visible={isModalOpen} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add Case to Database</Text>
+
+            {/* Query Field */}
+            <TextInput
+              value={caseData.query}
+              onChangeText={(text) => setCaseData({ ...caseData, query: text })}
+              style={styles.input}
+              placeholder="User Query"
+            />
+
+            {/* Case Heading Field */}
+            <TextInput
+              value={caseData.caseHeading}
+              onChangeText={(text) => setCaseData({ ...caseData, caseHeading: text })}
+              style={styles.input}
+              placeholder="Case Heading"
+            />
+
+            {/* Applicable Articles Field */}
+            <TextInput
+              value={caseData.applicableArticles}
+              onChangeText={(text) => setCaseData({ ...caseData, applicableArticles: text })}
+              style={styles.input}
+              placeholder="Applicable Articles"
+            />
+
+            {/* Status Field */}
+            <TextInput
+              value={caseData.status}
+              onChangeText={(text) => setCaseData({ ...caseData, status: text })}
+              style={styles.input}
+              placeholder="Status"
+            />
+
+            {/* Description Field */}
+            <TextInput
+              value={caseData.description}
+              onChangeText={(text) => setCaseData({ ...caseData, description: text })}
+              style={styles.input}
+              placeholder="Description"
+            />
+
+            {/* Save and Cancel Buttons */}
+            <View style={styles.modalButtons}>
+              <Button title="Cancel" onPress={() => setIsModalOpen(false)} />
+              <Button title="Save Case" onPress={handleSaveCase} />
+            </View>
+          </View>
         </View>
       </Modal>
     );
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Integrate the MenuBar component with high zIndex */}
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        {/* Query Response Box */}
+        <View style={styles.queryResponseBox}>
+          {isLoading ? (
+            <Text style={styles.loadingText}>Loading...</Text>
+          ) : error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : (
+            <Text style={styles.responseText}>{response}</Text>
+          )}
+        </View>
 
-      {/* Query Response Box */}
-      <View style={styles.queryResponseBox}>
-        {isLoading ? (
-          <Text style={styles.loadingText}>Loading...</Text>
-        ) : error ? (
-          <Text style={styles.errorText}>{error}</Text>
-        ) : (
-          <Text style={styles.responseText}>{response}</Text>
-        )}
+        {/* User input for query with microphone button */}
+        <View style={styles.queryContainer}>
+          <TextInput
+            style={styles.queryEntryBox}
+            value={query}
+            onChangeText={handleInputChange}
+            placeholder="Type your query here..."
+          />
+          <TouchableOpacity onPress={handleMicClick} style={styles.micButton}>
+            <Icon name="microphone" size={30} color={isListening ? 'green' : 'gray'} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Submit Button */}
+        <View style={styles.submitButtonContainer}>
+          <Button style={styles.submitButton} title="Submit" onPress={handleQuerySubmit} color="#007bff" />
+        </View>
+
+        {/* Render Popup after response */}
+        {renderPopup()}
+
+        {/* Case Information Modal */}
+        {isModalOpen && renderModal()}
       </View>
-
-      {/* User input for query */}
-      <TextInput
-        style={styles.queryEntryBox}
-        value={query}
-        onChangeText={handleInputChange}
-        placeholder="Type your query here..."
-      />
-
-      {/* Microphone button */}
-      <TouchableOpacity onPress={handleMicClick} style={styles.micButton}>
-        <Icon name="microphone" size={30} color={isListening ? 'green' : 'gray'} />
-      </TouchableOpacity>
-
-      {/* Submit Button */}
-      <Button title="Submit" onPress={handleQuerySubmit} />
-
-      {/* Case Information Modal */}
-      {isModalOpen && (
-        <Modal transparent={true} visible={isModalOpen}>
-          <View style={styles.modalBackground}>
-            <View style={styles.modalContent}>
-              <Text>Case Heading</Text>
-              <TextInput
-                value={caseData.caseHeading}
-                onChangeText={(text) => setCaseData({ ...caseData, caseHeading: text })}
-                style={styles.modalInput}
-              />
-
-              <Text>Applicable Articles</Text>
-              <TextInput
-                value={caseData.applicableArticles}
-                onChangeText={(text) => setCaseData({ ...caseData, applicableArticles: text })}
-                style={styles.modalInput}
-              />
-
-              <Text>Status</Text>
-              <TextInput
-                value={caseData.status}
-                onChangeText={(text) => setCaseData({ ...caseData, status: text })}
-                style={styles.modalInput}
-              />
-
-              <Text>Description</Text>
-              <TextInput
-                value={caseData.description}
-                onChangeText={(text) => setCaseData({ ...caseData, description: text })}
-                style={styles.modalInput}
-              />
-
-              <View style={styles.tagContainer}>
-                <Text>Tags</Text>
-                <TextInput
-                  value={tagInput}
-                  onChangeText={setTagInput}
-                  style={styles.tagInput}
-                />
-                <Button title="Add Tag" onPress={handleAddTag} />
-                <FlatList
-                  data={caseData.tags}
-                  renderItem={({ item, index }) => (
-                    <View style={styles.tagItem}>
-                      <Text>{item}</Text>
-                      <TouchableOpacity onPress={() => handleRemoveTag(index)}>
-                        <Text style={styles.removeTag}>Remove</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                  keyExtractor={(item, index) => index.toString()}
-                />
-              </View>
-
-              <Button title="Save Case" onPress={handleSaveCase} />
-              <Button title="Cancel" onPress={() => setIsModalOpen(false)} />
-            </View>
-          </View>
-        </Modal>
-      )}
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
-  menuBar: {
-    zIndex: 1000,
-    position: 'absolute',
-    top: 0,
-    width: '100%',
-    elevation: 1000, // Ensure the MenuBar has the highest stack level
-  },
-  queryEntryBox: {
-    marginVertical: 20,
+  // Add styles for the popup
+  popupContainer: {
+    position: 'fixed', // Change from 'absolute' to 'fixed'
+    top: 20, // Stick it to the top of the screen
+    left: 0,
+    right: 0,
+    bottom: 20,
+    backgroundColor: 'white',
     padding: 10,
-    borderWidth: 1,
-    borderRadius: 5,
-    borderColor: '#ccc',
-    backgroundColor: '#fff',
-    zIndex: 1, // Lower zIndex for this element
+    borderRadius: 10,
+    zIndex: 10, // Ensure the popup is on top
+  },
+  popup: {
+    backgroundColor: 'darkblue',
+    padding: 15,
+    borderColor: 'black',
+    borderRadius: 10,
+  },
+  popupText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  
+  
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    width: '90%',
+    padding: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+    marginVertical: 10, // Add some vertical spacing between cards
   },
   queryResponseBox: {
-    marginVertical: 20,
-    padding: 10,
+    padding: 20,
+    marginBottom: 15,
+    backgroundColor: '#f9f9f9', // Light grey background
+    borderRadius: 12, // Rounded corners
     borderWidth: 1,
-    borderRadius: 5,
-    borderColor: '#ccc',
-    backgroundColor: '#f9f9f9',
-    zIndex: 1, // Lower zIndex for this element
+    borderColor: '#ddd', // Light border color
   },
-  loadingText: { textAlign: 'center', color: 'blue' },
-  errorText: { textAlign: 'center', color: 'red' },
-  responseText: { textAlign: 'center' },
-  modalBackground: {
+  responseText: {
+    fontSize: 16,
+    color: '#333', // Dark text color for readability
+    textAlign: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#007bff', // Blue color for loading
+    fontWeight: '500', // Slightly bolder
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#d9534f', // Bootstrap red color
+    fontWeight: '500', // Slightly bolder
+    textAlign: 'center',
+  },
+  queryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 25, // Increased space between input and button
+  },
+  queryEntryBox: {
+    flex: 1,
+    height: 45,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8, // Smoother input corners
+    paddingHorizontal: 15,
+    backgroundColor: '#f5f5f5', // Light grey background for input field
+    fontSize: 16, // Slightly larger font
+  },
+  micButton: {
+    marginLeft: 15,
+    padding: 10,
+    borderRadius: 500,
+    backgroundColor: 'white', // Mic button background color
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  submitButtonContainer: {
+    marginTop: 15,
+    borderRadius:20
+  },
+  submitButton:{
+borderRadius: 20,
+  },
+  modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    zIndex: 1, // Lower zIndex for modal background
+    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Darker overlay
   },
   modalContent: {
-    width: '80%',
-    padding: 20,
-    backgroundColor: 'white',
-    zIndex: 2, // Ensure modal content is higher than background but lower than MenuBar
+    width: '85%', // Slightly wider modal
+    padding: 25,
+    backgroundColor: '#ffffff',
+    borderRadius: 15, // Rounder modal corners
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 10,
   },
-  modalTitle: { fontSize: 20, fontWeight: 'bold' },
-  modalBody: { marginVertical: 10 },
-  modalInput: { borderWidth: 1, marginVertical: 5, padding: 10 },
-  tagContainer: { marginVertical: 20 },
-  tagInput: { borderWidth: 1, padding: 10, marginVertical: 10 },
-  tagItem: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 5 },
-  removeTag: { color: 'red' },
-  micButton: { marginTop: 10 },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600', // Slightly lighter than bold
+    marginBottom: 20,
+    color: '#333', // Darker title color
+  },
+  input: {
+    height: 45,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    marginBottom: 15,
+    borderRadius: 8,
+    paddingLeft: 15,
+    fontSize: 16,
+    backgroundColor: '#f5f5f5', // Light grey background
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20, // Added spacing between buttons and input fields
+  },
+  modalButton: {
+    flex: 1,
+    marginHorizontal: 10,
+    paddingVertical: 12,
+    backgroundColor: '#007bff',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  cancelButton: {
+    backgroundColor: '#d9534f', // Red background for cancel button
+  },
+  saveButton: {
+    backgroundColor: '#5bc0de', // Light blue for save button
+  },
 });
-
 
 export default Query;

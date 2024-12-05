@@ -15,6 +15,8 @@ import Accessibility from './pages/Accessibility';
 import TermsAndConditions from './pages/TermsAndConditions';
 import FIRDownload from './pages/FIRDownload';
 import UtilityPage from './pages/UtilityPage';
+import OriginalDocuments from './pages/OriginalDocuments'; // Import from /pages
+import OfficialFIRFormat from './pages/OfficialFIRFormat'; // Import from /pages
 // Create the stack navigator
 const Stack = createNativeStackNavigator();
 
@@ -27,14 +29,16 @@ function App() {
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Database" component={Database} />
         <Stack.Screen name="Query" component={Query} />
-        <Stack.Screen name="BareActs" component={BareActs} />
+        <Stack.Screen name="Bare Acts" component={BareActs} />
         <Stack.Screen name="Download" component={Download} />
         <Stack.Screen name="Team" component={Team} />
-        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} />
+        <Stack.Screen name="Privacy Policy" component={PrivacyPolicy} />
         <Stack.Screen name="Accessibility" component={Accessibility} />
         <Stack.Screen name="Terms" component={TermsAndConditions} />
-        <Stack.Screen name="FIRDownload" component={FIRDownload} />
+        <Stack.Screen name="FIR Download" component={FIRDownload} />
         <Stack.Screen name="Utilities" component={UtilityPage} />
+        <Stack.Screen name="Original Documents" component={OriginalDocuments} />
+        <Stack.Screen name="Official FIR Format" component={OfficialFIRFormat} />
         {/* If you want to add a fallback, do it as below */}
         <Stack.Screen
           name="NotFound"
