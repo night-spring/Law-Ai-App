@@ -89,105 +89,153 @@ const Database = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.scrollView}
-        onScroll={(event) => {
-          if (event.nativeEvent.contentOffset.y > 200) {
-            setShowScrollBtn(true);
-          } else {
-            setShowScrollBtn(false);
-          }
-        }}
-      >
-        <Text style={styles.title}>Case Database</Text>
+    <ScrollView
+      ref={scrollViewRef}
+      style={styles.scrollView}
+      onScroll={(event) => {
+        if (event.nativeEvent.contentOffset.y > 200) {
+          setShowScrollBtn(true);
+        } else {
+          setShowScrollBtn(false);
+        }
+      }}
+    >
+      <Text style={styles.title}>Case Database</Text>
 
-        {cases.length === 0 ? (
-          <Text style={styles.noCasesText}>No cases available</Text>
-        ) : (
-          <FlatList
-            data={cases}
-            renderItem={({ item }) => (
-              <View style={styles.caseCard} key={item.id}>
-                <View style={styles.caseHeader}>
-                  <Text style={styles.caseHeading}>{item.caseHeading}</Text>
-                  <Text style={[styles.statusTag, { backgroundColor: getStatusColor(item.status) }]}>
-                    {item.status}
-                  </Text>
-                </View>
-                <Text style={styles.queryText}>{item.query}</Text>
-                <Text style={styles.tagsText}><Text style={styles.boldText}>Tags:</Text> {item.tags}</Text>
-                <View style={styles.cardFooter}>
-                  <TouchableOpacity onPress={() => openCaseDetailsModal(item.id)}>
-                    <Text style={styles.linkText}>Show Details</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      openCaseDetailsModal(item.id);
-                      setIsEditing(true);
-                    }}
-                  >
-                    <Text style={styles.editText}>Edit</Text>
-                  </TouchableOpacity>
-                </View>
+      {cases.length === 0 ? (
+        <Text style={styles.noCasesText}>No cases available</Text>
+      ) : (
+        <FlatList
+          data={cases}
+          renderItem={({ item }) => (
+            <View style={styles.caseCard} key={item.id}>
+              <View style={styles.caseHeader}>
+                <Text style={styles.caseHeading}>{item.caseHeading}</Text>
+                <Text style={[styles.statusTag, { backgroundColor: getStatusColor(item.status) }]}>
+                  {item.status}
+                </Text>
               </View>
-            )}
-            keyExtractor={(item) => item.id.toString()}
-          />
-        )}
-      </ScrollView>
-
-      {showScrollBtn && (
-        <TouchableOpacity onPress={scrollToTop} style={styles.scrollToTopButton}>
-          <Text style={styles.scrollToTopText}>↑</Text>
-        </TouchableOpacity>
-      )}
-
-      {activeCase && (
-        <Modal visible={true} transparent={true} animationType="slide" onRequestClose={closeCaseDetailsModal}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <TouchableOpacity onPress={closeCaseDetailsModal} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>×</Text>
-              </TouchableOpacity>
-              <ScrollView>
-                <Text style={styles.modalTitle}>
-                  {isEditing ? (
-                    <TextInput
-                      value={editedCaseData.caseHeading || ''}
-                      onChangeText={(text) => handleInputChange('caseHeading', text)}
-                      style={styles.editInput}
-                    />
-                  ) : (
-                    activeCase.caseHeading
-                  )}
-                </Text>
-                <Text style={styles.modalDescription}>
-                  <Text style={styles.boldText}>Query: </Text>
-                  {isEditing ? (
-                    <TextInput
-                      value={editedCaseData.query || ''}
-                      onChangeText={(text) => handleInputChange('query', text)}
-                      style={styles.editTextArea}
-                      multiline
-                    />
-                  ) : (
-                    activeCase.query
-                  )}
-                </Text>
-                <Text style={styles.modalDescription}>
-                  <Text style={styles.boldText}>Tags: </Text>
-                  {activeCase.tags}
-                </Text>
-                {isEditing && (
-                  <Button onPress={handleSaveChanges} title="Save Changes" color="#3B82F6" />
-                )}
-              </ScrollView>
+              <Text style={styles.queryText}>{item.query}</Text>
+              <Text style={styles.tagsText}><Text style={styles.boldText}>Tags:</Text> {item.tags}</Text>
+              <View style={styles.cardFooter}>
+                <TouchableOpacity onPress={() => openCaseDetailsModal(item.id)}>
+                  <Text style={styles.linkText}>Show Details</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    openCaseDetailsModal(item.id);
+                    setIsEditing(true);
+                  }}
+                >
+                  <Text style={styles.editText}>Edit</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </Modal>
+          )}
+          keyExtractor={(item) => item.id.toString()}
+        />
       )}
+    </ScrollView>
+
+    {showScrollBtn && (
+      <TouchableOpacity onPress={scrollToTop} style={styles.scrollToTopButton}>
+        <Text style={styles.scrollToTopText}>↑</Text>
+      </TouchableOpacity>
+    )}
+
+{activeCase && (
+  <Modal visible={true} transparent={true} animationType="slide" onRequestClose={closeCaseDetailsModal}>
+    <View style={styles.modalOverlay}>
+      <View style={styles.modalContent}>
+        <TouchableOpacity onPress={closeCaseDetailsModal} style={styles.closeButton}>
+          <Text style={styles.closeButtonText}>×</Text>
+        </TouchableOpacity>
+        <ScrollView>
+          <Text style={styles.modalTitle}>
+            {isEditing ? (
+              <TextInput
+                value={editedCaseData.caseHeading || ''}
+                onChangeText={(text) => handleInputChange('caseHeading', text)}
+                style={styles.editInput}
+              />
+            ) : (
+              activeCase.caseHeading
+            )}
+          </Text>
+
+          <Text style={styles.modalDescription}>
+            <Text style={styles.boldText}>Query: </Text>
+            {isEditing ? (
+              <TextInput
+                value={editedCaseData.query || ''}
+                onChangeText={(text) => handleInputChange('query', text)}
+                style={styles.editTextArea}
+                multiline
+              />
+            ) : (
+              activeCase.query
+            )}
+          </Text>
+
+          <Text style={styles.modalDescription}>
+            <Text style={styles.boldText}>Tags: </Text>
+            {activeCase.tags}
+          </Text>
+
+          <Text style={styles.modalDescription}>
+  <Text style={styles.boldText}>Applicable Articles: </Text>
+  {isEditing ? (
+    <TextInput
+      value={editedCaseData.applicableArticle || ''}
+      onChangeText={(text) => handleInputChange('applicableArticle', text)}
+      style={styles.editInput}
+    />
+  ) : (
+    <View>
+      {activeCase.applicableArticle &&
+        activeCase.applicableArticle
+          .split('**') // Split by double stars
+          .filter((part, index) => index % 2 !== 0) // Keep only the odd-indexed parts (the text between '**')
+          .map((article, index) => (
+            <Text key={index} style={styles.applicableArticleText}>
+              {article}
+            </Text>
+          ))}
     </View>
+  )}
+</Text>
+
+
+          <Text style={styles.modalDescription}>
+            <Text style={styles.boldText}>Description: </Text>
+            {activeCase.description}
+          </Text>
+
+          
+
+          {/* If the status or other fields need to be editable */}
+          <Text style={styles.modalDescription}>
+            <Text style={styles.boldText}>Status: </Text>
+            {isEditing ? (
+              <TextInput
+                value={editedCaseData.status || ''}
+                onChangeText={(text) => handleInputChange('status', text)}
+                style={styles.editInput}
+              />
+            ) : (
+              activeCase.status
+            )}
+          </Text>
+
+          {isEditing && (
+            <Button onPress={handleSaveChanges} title="Save Changes" color="#3B82F6" />
+          )}
+        </ScrollView>
+      </View>
+    </View>
+  </Modal>
+)}
+  </View>
   );
 };
 

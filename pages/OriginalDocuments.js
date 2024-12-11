@@ -5,13 +5,13 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Buffer } from 'buffer';
 
-
 const OriginalDocuments = () => {
   const [pdfs, setPdfs] = useState([]);
   const [filteredPdfs, setFilteredPdfs] = useState([]);
   const [pdfSearchQuery, setPdfSearchQuery] = useState('');
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(null);
+
 
   useEffect(() => {
     // Fetch PDF metadata
@@ -190,6 +190,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
+  
 });
 
 export default OriginalDocuments;

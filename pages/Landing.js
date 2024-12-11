@@ -59,6 +59,12 @@ const Landing = () => {
         </View>
        
       </View>
+      <View style={styles.navLinks}>
+          <TouchableOpacity onPress={() => navigation.navigate('Home')}><Text style={styles.navText}>Home</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Key Features')}><Text style={styles.navText}>Features</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Vision')}><Text style={styles.navText}>Vision</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Contact')}><Text style={styles.navText}>Contact</Text></TouchableOpacity>
+        </View>
 
       {/* Back to Top Button */}
       {showButton && (
@@ -119,151 +125,25 @@ const Landing = () => {
         providing them with the resources they need to uphold justice and maintain public trust.
       </Text>
     </View>
-    <View style={styles.keyFeaturesContainer}>
-      {/* Heading */}
-      <Text style={styles.keyFeaturesHeading}>Key Features</Text>
-
-      {/* Feature Cards */}
-      <View style={styles.keyFeaturesCardsContainer}>
-        {/* Feature Card 1 */}
-        <View style={styles.keyFeaturesCard}>
-          <View style={[styles.keyFeaturesIconContainer, { backgroundColor: '#3b82f6' }]}>
-            <Icon name="library-books" size={32} color="#ffffff" />
-          </View>
-          <Text style={styles.keyFeaturesCardTitle}>NLP & Legal Database</Text>
-          <Text style={styles.keyFeaturesCardText}>
-            Interprets incident details and connects to legal databases for relevant laws.
-          </Text>
-        </View>
-
-        {/* Feature Card 2 */}
-        <View style={styles.keyFeaturesCard}>
-          <View style={[styles.keyFeaturesIconContainer, { backgroundColor: '#10b981' }]}>
-            <Icon name="sync" size={32} color="#ffffff" />
-          </View>
-          <Text style={styles.keyFeaturesCardTitle}>Unified Platform</Text>
-          <Text style={styles.keyFeaturesCardText}>
-            Centralized repository of updated laws with easy search by act, section, or keyword.
-          </Text>
-        </View>
-
-        {/* Feature Card 3 */}
-        <View style={styles.keyFeaturesCard}>
-          <View style={[styles.keyFeaturesIconContainer, { backgroundColor: '#ef4444' }]}>
-            <Icon name="assignment-turned-in" size={32} color="#ffffff" />
-          </View>
-          <Text style={styles.keyFeaturesCardTitle}>Case Database for Monitoring</Text>
-          <Text style={styles.keyFeaturesCardText}>
-            Monitor ongoing and past cases seamlessly with real-time updates and case tracking.
-          </Text>
-        </View>
-      </View>
-    </View>
-      {/* Vision Section */}
-      <View style={styles.visionSection}>
-      {/* Icon */}
-      <View style={styles.iconWrapper}>
-        <View style={styles.iconContainer}>
-        <Icon name="visibility" size={32} color="#2563eb" />
-
-        </View>
-      </View>
-
-      {/* Title */}
-      <Text style={styles.visionTitle}>Our Vision</Text>
-
-      {/* Description */}
-      <Text style={styles.visionText}>
-        At LawAI, we aim to bridge the gap between law enforcement and advanced technology,
-        empowering officers with tools to uphold justice swiftly and accurately across the nation.
-      </Text>
-
-      {/* Cards */}
-      <View style={styles.visionCards}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Innovative AI Tools</Text>
-          <Text style={styles.cardText}>
-            Leveraging the latest AI advancements to bring unmatched precision in legal processes.
-          </Text>
-        </View>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Empowering Officers</Text>
-          <Text style={styles.cardText}>
-            Providing law enforcement with resources that make their work efficient and impactful.
-          </Text>
-        </View>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Nationwide Impact</Text>
-          <Text style={styles.cardText}>
-            Reaching every corner of the country to ensure justice is accessible to all.
-          </Text>
-        </View>
-      
-    </View>
-      </View>
-      <View style={styles.contactSection}>
-        {/* Left Section */}
-        <View style={styles.leftSection}>
-          <Text style={styles.heading}>Get in Touch</Text>
-          <Text style={styles.description}>
-            Have questions, feedback, or just want to say hello? Fill out the form or reach us via our contact details below. We're here to help!
-          </Text>
-          <View style={styles.contactDetails}>
-            <View style={styles.contactItem}>
-              <Icon name="envelope" size={20} color="#3b82f6" />
-              <Text style={styles.contactText}>code.a.cola.01@gmail.com</Text>
-            </View>
-            <View style={styles.contactItem}>
-              <Icon name="phone" size={20} color="#3b82f6" />
-              <Text style={styles.contactText}>+91-123-456-7890</Text>
-            </View>
-            <View style={styles.contactItem}>
-              <Icon name="map-marker" size={20} color="#3b82f6" />
-              <Text style={styles.contactText}>Ministry of Law & Justice, Madhya Pradesh, India</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Right Section (Form) */}
-        <View style={styles.formSection}>
-          <View style={styles.formField}>
-            <Text style={styles.label}>Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Your Name"
-              value={formData.name}
-              onChangeText={(text) => handleInputChange('name', text)}
-            />
-          </View>
-          <View style={styles.formField}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="youremail@example.com"
-              value={formData.email}
-              onChangeText={(text) => handleInputChange('email', text)}
-            />
-          </View>
-          <View style={styles.formField}>
-            <Text style={styles.label}>Message</Text>
-            <TextInput
-              style={styles.textArea}
-              placeholder="Your message here..."
-              value={formData.message}
-              onChangeText={(text) => handleInputChange('message', text)}
-              multiline
-            />
-          </View>
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Send Message</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+   
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  navLinks: {
+    flexDirection: 'row',  // Align the items horizontally
+    justifyContent: 'space-around', // Space them evenly across the container
+    alignItems: 'center', // Center the items vertically
+    padding: 10, // Optional: adds space around the nav links
+    backgroundColor: 'darkblue', // Optional: background color for the nav bar
+  },
+  navText: {
+    color: '#fff', // Text color
+    fontSize: 16, // Font size for the text
+    fontWeight: 'bold', // Optional: bold font style
+    padding: 10, // Adds space around the text for better clickability
+  },
   container: {
     flex: 1,
     backgroundColor: '#f9f9f9',
@@ -410,220 +290,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     maxWidth: 800,
   },
-  keyFeaturesContainer: {
-    backgroundColor: '#f9fafb',
-    paddingVertical: 32,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  keyFeaturesHeading: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1e3a8a',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  keyFeaturesCardsContainer: {
-    width: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
-  },
-  keyFeaturesCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
-    width: '90%',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    elevation: 4,
-    alignItems: 'center',
-  },
-  keyFeaturesIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  keyFeaturesCardTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1e40af',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  keyFeaturesCardText: {
-    fontSize: 16,
-    color: '#4b5563',
-    textAlign: 'center',
-  },
-  visionSection: {
-    backgroundColor: '#f9fafb',
-    paddingVertical: 32,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  iconWrapper: {
-    marginBottom: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconContainer: {
-    backgroundColor: '#dbeafe',
-    padding: 12,
-    borderRadius: 9999,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  icon: {
-    fontSize: 32,
-    color: '#2563eb',
-  },
-  visionTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#1e3a8a',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  visionText: {
-    fontSize: 16,
-    color: '#4b5563',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 24,
-    maxWidth: 600,
-  },
-  visionCards: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  container: {
-    flexGrow: 1,
-  },
-  contactSection: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingVertical: 32,
-    paddingHorizontal: 16,
-    backgroundColor: '#ebf8ff',
-    justifyContent: 'center',
-  },
-  leftSection: {
-    flex: 1,
-    alignItems: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 16,
-  },
-  heading: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1e3a8a',
-    marginBottom: 12,
-  },
-  description: {
-    fontSize: 16,
-    color: '#4b5563',
-    textAlign: 'center',
-    marginBottom: 16,
-    maxWidth: 400,
-  },
-  contactDetails: {
-    width: '100%',
-  },
-  contactItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  contactText: {
-    fontSize: 16,
-    color: '#4b5563',
-    marginLeft: 8,
-  },
-  formSection: {
-    flex: 1,
-    marginLeft: 16,
-    width: '100%',
-  },
-  formField: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    color: '#4b5563',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderColor: '#d1d5db',
-    borderWidth: 1,
-    fontSize: 16,
-  },
-  textArea: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderColor: '#d1d5db',
-    borderWidth: 1,
-    fontSize: 16,
-    height: 120,
-  },
-  submitButton: {
-    backgroundColor: '#2563eb',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  submitButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-
-  // Responsive Styles for smaller screens
-  '@media (max-width: 640px)': {
-    leftSection: {
-      marginBottom: 0,
-      paddingHorizontal: 8,
-      flex: 1,
-    },
-    formSection: {
-      marginLeft: 0,
-      width: '100%',
-    },
-    heading: {
-      fontSize: 24,
-    },
-    description: {
-      fontSize: 14,
-      paddingHorizontal: 16,
-    },
-    input: {
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-    },
-    textArea: {
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-    },
-    submitButton: {
-      marginTop: 12,
-    },
-  },
+  
   card: {
     backgroundColor: '#ffffff',
     padding: 20,

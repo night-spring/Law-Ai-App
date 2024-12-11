@@ -17,6 +17,9 @@ import FIRDownload from './pages/FIRDownload';
 import UtilityPage from './pages/UtilityPage';
 import OriginalDocuments from './pages/OriginalDocuments'; // Import from /pages
 import OfficialFIRFormat from './pages/OfficialFIRFormat'; // Import from /pages
+import KeyFeatures from './pages/KeyFeatures';
+import Vision from './pages/Vision';
+import Contact from './pages/Contact';
 // Create the stack navigator
 const Stack = createNativeStackNavigator();
 
@@ -39,6 +42,9 @@ function App() {
         <Stack.Screen name="Utilities" component={UtilityPage} />
         <Stack.Screen name="Original Documents" component={OriginalDocuments} />
         <Stack.Screen name="Official FIR Format" component={OfficialFIRFormat} />
+        <Stack.Screen name="Vision" component={Vision} />
+        <Stack.Screen name="Key Features" component={KeyFeatures} />
+        <Stack.Screen name="Contact" component={Contact} />
         {/* If you want to add a fallback, do it as below */}
         <Stack.Screen
           name="NotFound"

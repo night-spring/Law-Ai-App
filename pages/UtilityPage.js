@@ -12,8 +12,8 @@ const UtilityPage = ({ isLoggedIn }) => {
     { name: 'Original Documents', icon: 'file', description: 'Upload and manage your original legal documents.', screen: 'Original Documents' },
     { name: 'Database', icon: 'database', description: 'Explore a collection of legal documents and case law.', screen: 'Database' },
     { name: 'FIR Builder', icon: 'file-text', description: 'Generate and download FIR documents.', screen: 'FIR Download' },
-    { name: 'Official FIR Format', icon: 'file-o', description: 'View and download the official FIR format.', screen: 'Official FIR Format' },
-    { name: isLoggedIn ? 'Profile' : 'Login', icon: isLoggedIn ? 'user' : 'sign-in', description: isLoggedIn ? 'View your profile and settings.' : 'Login to access your profile.', screen: isLoggedIn ? 'Profile' : 'Login' },
+   // { name: 'Official FIR Format', icon: 'file-o', description: 'View and download the official FIR format.', screen: 'Official FIR Format' },
+   // { name: isLoggedIn ? 'Profile' : 'Login', icon: isLoggedIn ? 'user' : 'sign-in', description: isLoggedIn ? 'View your profile and settings.' : 'Login to access your profile.', screen: isLoggedIn ? 'Profile' : 'Login' },
     { name: 'Settings', icon: 'cogs', description: 'Manage app settings and preferences.', screen: 'Settings' },
   ];
 
