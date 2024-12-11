@@ -1,33 +1,35 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { FileSystem } from 'expo-file-system';
-import { Sharing } from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing'; // Ensure correct import
 
 const OfficialFIRFormat = () => {
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Function to download and save the FIR PDF file
-  const downloadPdf = async () => {
+  // Function to download and save the FIR .docx file
+  const downloadDocx = async () => {
     setIsDownloading(true); // Start the download process
 
     try {
-      // Path to your FIR.pdf file in the assets folder (relative path within your project)
-      const fileUri = FileSystem.documentDirectory + 'FIR.pdf';
+      // Path to where the file will be saved on the device
+      const fileUri = FileSystem.documentDirectory + 'FIR-Format.docx';
 
-      // Copy the FIR.pdf file to the device's file system
+      // Download the .docx file from the provided URL and save it
       await FileSystem.downloadAsync(
-        'https://yourserver.com/path/to/FIR.pdf', // Use the URL where your FIR.pdf is hosted
+        'https://savelifefoundation.org/wp-content/uploads/2016/11/A1-Format-of-FIR-part-of-Step-I.docx', // URL of the FIR .docx file
         fileUri
       );
 
-      // Optionally, share the downloaded PDF if sharing is available
+      // Optionally, share the downloaded file if sharing is available
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri);
+      } else {
+        Alert.alert('Sharing not available', 'Your device does not support sharing.');
       }
 
       Alert.alert('Download Complete', 'The FIR format has been downloaded and saved.');
     } catch (error) {
-      console.error('Error downloading the PDF:', error);
+      console.error('Error downloading the file:', error);
       Alert.alert('Download Error', 'There was an issue downloading the FIR format.');
     } finally {
       setIsDownloading(false); // End the download process
@@ -43,7 +45,7 @@ const OfficialFIRFormat = () => {
 
       <TouchableOpacity
         style={styles.downloadButton}
-        onPress={downloadPdf}
+        onPress={downloadDocx}
         disabled={isDownloading} // Disable button while downloading
       >
         <Text style={styles.downloadText}>

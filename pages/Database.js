@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   editText: {
-    color: '#F59E0B',
+    color: 'blue',
     fontSize: 16,
   },
   scrollToTopButton: {
