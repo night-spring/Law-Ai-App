@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ActivityIndicator, TouchableOpacity, StyleSheet, ScrollView, Button, Platform, PermissionsAndroid } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import SpeechToText from 'react-native-voice'; // Import SpeechToText
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -10,36 +20,39 @@ const Query = () => {
   const [showDescriptions, setShowDescriptions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
-
-
+  const [modalVisible, setModalVisible] = useState(false);
+  const [caseDetails, setCaseDetails] = useState({
+    caseHeading: '',
+    userQuery: '',
+    tags: '',
+    description: '',
+    caseStatus: 'closed',
+  });
+  const [showPopup, setShowPopup] = useState(false);
   const [error, setError] = useState('');
-
- 
 
   const toggleDescription = (section) => {
     if (activeSection === section) {
-      setActiveSection(null);  // Collapse if the same section is clicked
+      setActiveSection(null); // Collapse if the same section is clicked
     } else {
-      setActiveSection(section);  // Expand the clicked section
+      setActiveSection(section); // Expand the clicked section
     }
   };
-  
+
   const handleMicClick = async () => {
     try {
       if (isListening) {
-        // Stop listening
         await SpeechToText.stopListening();
         console.log('Speech recognition stopped');
         setIsListening(false);
       } else {
-        // Start listening
         await SpeechToText.startListening();
         console.log('Speech recognition started');
         setIsListening(true);
       }
     } catch (error) {
       console.error('Error in handling mic click:', error);
-      setIsListening(false); // Reset listening state on error
+      setIsListening(false);
     }
   };
 
@@ -54,14 +67,20 @@ const Query = () => {
     try {
       const response = await fetch('https://sih-backend-881i.onrender.com/encode/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
       });
 
       const data = await response.json();
-      setResponse(data); // Display the entire response as it is
+      setResponse(data);
+      setCaseDetails({
+        caseHeading: 'New Case Identified',
+        userQuery: query,
+        tags: 'theft, investigation, IPC',
+        description: data.description || 'Detailed case description here.',
+        caseStatus: 'under investigation',
+      });
+      setShowPopup(true);
     } catch (error) {
       console.error('Error fetching the response:', error);
       setError('Error occurred while fetching the response');
@@ -79,73 +98,175 @@ const Query = () => {
     if (typeof data === 'object' && typeof data.acts === 'object') {
       return (
         <View>
-  <Text style={styles.responseTitle}>Act: IPC</Text>
-  <ScrollView style={styles.scrollView}>
-  {Object.entries(data.acts).map(([section, description], index) => (
-    <View key={index} style={styles.sectionContainer}>
-      <Text style={styles.responseText}>Section {section}</Text>
-      <TouchableOpacity onPress={() => toggleDescription(section)}>
-        <Text style={styles.linkText}>
-          {activeSection === section ? 'Hide Description' : 'Show Description'}
-        </Text>
-      </TouchableOpacity>
-      {activeSection === section && (
-        <Text style={styles.descriptionText}>{description}</Text>
-      )}
-    </View>
-  ))}
-</ScrollView>
-
-</View>
-
+          <Text style={styles.responseTitle}>Act: IPC</Text>
+          <ScrollView style={styles.scrollView}>
+            {Object.entries(data.acts).map(([section, description], index) => (
+              <View key={index} style={styles.sectionContainer}>
+                <Text style={styles.responseText}>Section {section}</Text>
+                <TouchableOpacity onPress={() => toggleDescription(section)}>
+                  <Text style={styles.linkText}>
+                    {activeSection === section ? 'Hide Description' : 'Show Description'}
+                  </Text>
+                </TouchableOpacity>
+                {activeSection === section && (
+                  <Text style={styles.descriptionText}>{description}</Text>
+                )}
+              </View>
+            ))}
+          </ScrollView>
+        </View>
       );
     }
 
     return <Text style={styles.responseText}>{JSON.stringify(data, null, 2)}</Text>;
   };
 
+  const handleSaveCase = async () => {
+    const payload = {
+      cases: [
+        {
+          id: 4,
+          caseHeading: caseDetails.caseHeading,
+          applicableArticle: caseDetails.description,
+        },
+      ],
+    };
+
+    try {
+      const response = await fetch('https://sih-backend-881i.onrender.com/case_save/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      Alert.alert('Success', 'Case saved successfully!');
+      setModalVisible(false);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save case.');
+    }
+  };
+
+  const handlePopupClick = () => {
+    setShowPopup(false);
+    setModalVisible(true);
+  };
+
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.responseContainer}>
-        <View style={styles.responseBox}>
-          {isLoading ? (
-            <ActivityIndicator size="large" color="#007bff" />
-          ) : error ? (
-            <Text style={styles.errorText}>{error}</Text>
-          ) : (
-            renderResponse(response)
-          )}
+      <ScrollView>
+        <View style={styles.responseContainer}>
+          <View style={styles.responseBox}>
+            {isLoading ? (
+              <ActivityIndicator size="large" color="#007bff" />
+            ) : error ? (
+              <Text style={styles.errorText}>{error}</Text>
+            ) : (
+              renderResponse(response)
+            )}
+          </View>
         </View>
-      </ScrollView>
 
-      {/* Query Input with Mic */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          value={query}
-          onChangeText={handleInputChange}
-          placeholder="Type your query here..."
-          placeholderTextColor="#ccc"
-        />
-        <TouchableOpacity
-          onPress={() => {
-            console.log('Microphone button clicked'); // Debug log for button click
-            handleMicClick(); // Ensure handleMicClick is invoked correctly
-          }}
-          style={styles.micButton}
-        >
-          <Icon
-            name="microphone"
-            size={24}
-            color={isListening ? '#007bff' : '#555'}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            value={query}
+            onChangeText={handleInputChange}
+            placeholder="Type your query here..."
+            placeholderTextColor="#ccc"
           />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            onPress={handleMicClick}
+            style={styles.micButton}
+          >
+            <Icon
+              name="microphone"
+              size={24}
+              color={isListening ? '#007bff' : '#555'}
+            />
+          </TouchableOpacity>
+        </View>
 
-      {/* Submit Button */}
-      <TouchableOpacity onPress={handleQuerySubmit} style={styles.submitButton}>
-        <Text style={styles.submitButtonText}>Submit Query</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={handleQuerySubmit} style={styles.submitButton}>
+          <Text style={styles.submitButtonText}>Submit Query</Text>
+        </TouchableOpacity>
+
+        {showPopup && (
+          <TouchableOpacity style={styles.popup} onPress={handlePopupClick}>
+            <Text style={styles.popupText}>New Case Identified</Text>
+          </TouchableOpacity>
+        )}
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+  <View style={styles.modalContent}>
+    <Text style={styles.modalTitle}>Edit Case Details</Text>
+
+    <Text style={styles.modalLabel}>Case Heading:</Text>
+    <TextInput
+      style={styles.modalInput}
+      value={caseDetails.caseHeading}
+      onChangeText={(text) =>
+        setCaseDetails({ ...caseDetails, caseHeading: text })
+      }
+    />
+
+    <Text style={styles.modalLabel}>User Query:</Text>
+    <TextInput
+      style={styles.modalInput}
+      value={caseDetails.userQuery}
+      onChangeText={(text) =>
+        setCaseDetails({ ...caseDetails, userQuery: text })
+      }
+    />
+
+    <Text style={styles.modalLabel}>Tags:</Text>
+    <TextInput
+      style={styles.modalInput}
+      value={caseDetails.tags}
+      onChangeText={(text) =>
+        setCaseDetails({ ...caseDetails, tags: text })
+      }
+    />
+
+    <Text style={styles.modalLabel}>Description:</Text>
+    <TextInput
+      style={[styles.modalInput, { height: 80 }]}
+      multiline
+      value={caseDetails.description}
+      onChangeText={(text) =>
+        setCaseDetails({ ...caseDetails, description: text })
+      }
+    />
+
+    <Text style={styles.modalLabel}>Case Status:</Text>
+    <TextInput
+      style={styles.modalInput}
+      value={caseDetails.caseStatus}
+      onChangeText={(text) =>
+        setCaseDetails({ ...caseDetails, caseStatus: text })
+      }
+    />
+
+    <TouchableOpacity style={styles.saveButton} onPress={handleSaveCase}>
+      <Text style={styles.saveButtonText}>Save Case</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={styles.closeButton}
+      onPress={() => setModalVisible(false)}
+    >
+      <Text style={styles.closeButtonText}>Close</Text>
+    </TouchableOpacity>
+  </View>
+</View>
+
+        </Modal>
+      </ScrollView>
     </View>
   );
 };
@@ -214,20 +335,77 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  responseText: {
-    fontSize: 16,
-    marginBottom: 8,
+  popup: {
+    backgroundColor: '#ffc107',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginVertical: 20,
   },
-  linkText: {
-    color: 'blue',  // Blue color for the clickable text
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    fontSize: 14,
+    marginTop: 5,
+    marginBottom: 10,
+    backgroundColor: '#f9f9f9',
+  },
+  popupText: {
+    color: '#fff',
     fontSize: 16,
-    textDecorationLine: 'underline',  // Optional: Adds an underline to make it look like a link
+    fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '90%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
     marginBottom: 10,
   },
-  descriptionText: {
+  modalLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginTop: 10,
+  },
+  modalText: {
     fontSize: 14,
-    color: '#333',
-    marginTop: 8,
+    marginBottom: 10,
+  },
+  saveButton: {
+    backgroundColor: '#28a745',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  closeButton: {
+    backgroundColor: '#dc3545',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   sectionContainer: {
     marginBottom: 16,
