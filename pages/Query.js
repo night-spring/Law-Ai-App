@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ActivityIndicator, TouchableOpacity, StyleSheet,ScrollView,Button } from 'react-native';
-import Voice from 'react-native-voice'; // For voice recognition
+import { View, Text, TextInput, ActivityIndicator, TouchableOpacity, StyleSheet, ScrollView, Button, Platform, PermissionsAndroid } from 'react-native';
+import SpeechToText from 'react-native-voice'; // Import SpeechToText
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 const Query = () => {
@@ -9,13 +9,15 @@ const Query = () => {
   const [isListening, setIsListening] = useState(false);
   const [showDescriptions, setShowDescriptions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeSection, setActiveSection] = useState(null);
+
+
   const [error, setError] = useState('');
-  
 
   useEffect(() => {
-    const initializeVoice = async () => {
-      try {
-        if (Platform.OS === 'android') {
+    const initializeSpeechRecognition = async () => {
+      if (Platform.OS === 'android') {
+        try {
           const granted = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
             {
@@ -28,50 +30,46 @@ const Query = () => {
           );
           if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
             console.error('Microphone permission denied');
+            return;
           }
+        } catch (err) {
+          console.error('Permission request failed:', err);
         }
-      } catch (err) {
-        console.error('Permission request failed:', err);
       }
     };
 
-    initializeVoice();
-
-    Voice.onSpeechStart = () => {
-      console.log('Speech recognition started');
-    };
-
-    Voice.onSpeechEnd = () => {
-      console.log('Speech recognition ended');
-      setIsListening(false);
-    };
-
-    Voice.onSpeechResults = (event) => {
-      if (event.value && event.value.length > 0) {
-        setQuery(event.value[0]);
-      }
-    };
-
-    Voice.onSpeechError = (event) => {
-      console.error('Speech recognition error:', event.error);
-      setIsListening(false);
-    };
+    initializeSpeechRecognition();
 
     return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
+      // Cleanup if necessary
     };
   }, []);
-  const toggleDescriptions = () => {
-    setShowDescriptions((prev) => !prev);
-  };
 
-  const handleMicClick = () => {
-    if (isListening) {
-      Voice.stop();
+  const toggleDescription = (section) => {
+    if (activeSection === section) {
+      setActiveSection(null);  // Collapse if the same section is clicked
     } else {
-      Voice.start('en-US');
+      setActiveSection(section);  // Expand the clicked section
     }
-    setIsListening(!isListening);
+  };
+  
+  const handleMicClick = async () => {
+    try {
+      if (isListening) {
+        // Stop listening
+        await SpeechToText.stopListening();
+        console.log('Speech recognition stopped');
+        setIsListening(false);
+      } else {
+        // Start listening
+        await SpeechToText.startListening();
+        console.log('Speech recognition started');
+        setIsListening(true);
+      }
+    } catch (error) {
+      console.error('Error in handling mic click:', error);
+      setIsListening(false); // Reset listening state on error
+    }
   };
 
   const handleInputChange = (text) => {
@@ -80,7 +78,7 @@ const Query = () => {
 
   const handleQuerySubmit = async () => {
     setIsLoading(true);
-    setError('');     
+    setError('');
 
     try {
       const response = await fetch('https://sih-backend-881i.onrender.com/encode/', {
@@ -103,57 +101,51 @@ const Query = () => {
   };
 
   const renderResponse = (data) => {
-  
     if (!data) {
       return <Text style={styles.responseText}>No data available</Text>;
     }
-  
-    const toggleDescriptions = () => {
-      setShowDescriptions((prev) => !prev);
-    };
-  
+
     if (typeof data === 'object' && typeof data.acts === 'object') {
       return (
         <View>
-          <Text style={styles.responseTitle}>Act: IPC</Text>
-          <Button
-            title={showDescriptions ? "Hide Descriptions" : "Show Descriptions"}
-            onPress={toggleDescriptions}
-          />
-          <ScrollView style={styles.scrollView}>
-            {Object.entries(data.acts).map(([section, description], index) => (
-              <View key={index} style={styles.sectionContainer}>
-                <Text style={styles.responseText}>Section {section}</Text>
-                {showDescriptions && (
-                  <Text style={styles.descriptionText}>{description}</Text>
-                )}
-              </View>
-            ))}
-          </ScrollView>
-        </View>
+  <Text style={styles.responseTitle}>Act: IPC</Text>
+  <ScrollView style={styles.scrollView}>
+  {Object.entries(data.acts).map(([section, description], index) => (
+    <View key={index} style={styles.sectionContainer}>
+      <Text style={styles.responseText}>Section {section}</Text>
+      <TouchableOpacity onPress={() => toggleDescription(section)}>
+        <Text style={styles.linkText}>
+          {activeSection === section ? 'Hide Description' : 'Show Description'}
+        </Text>
+      </TouchableOpacity>
+      {activeSection === section && (
+        <Text style={styles.descriptionText}>{description}</Text>
+      )}
+    </View>
+  ))}
+</ScrollView>
+
+</View>
+
       );
     }
-  
-    return (
-      <Text style={styles.responseText}>
-        {JSON.stringify(data, null, 2)}
-      </Text>
-    );
+
+    return <Text style={styles.responseText}>{JSON.stringify(data, null, 2)}</Text>;
   };
-  
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.responseContainer}>
-      <View style={styles.responseBox}>
-        {isLoading ? (
-          <ActivityIndicator size="large" color="#007bff" />
-        ) : error ? (
-          <Text style={styles.errorText}>{error}</Text>
-        ) : (
-          renderResponse(response)
-        )}
-      </View>
-    </ScrollView>
+        <View style={styles.responseBox}>
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#007bff" />
+          ) : error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : (
+            renderResponse(response)
+          )}
+        </View>
+      </ScrollView>
 
       {/* Query Input with Mic */}
       <View style={styles.inputContainer}>
@@ -164,8 +156,18 @@ const Query = () => {
           placeholder="Type your query here..."
           placeholderTextColor="#ccc"
         />
-        <TouchableOpacity onPress={handleMicClick} style={styles.micButton}>
-          <Icon name="microphone" size={24} color={isListening ? '#007bff' : '#555'} />
+        <TouchableOpacity
+          onPress={() => {
+            console.log('Microphone button clicked'); // Debug log for button click
+            handleMicClick(); // Ensure handleMicClick is invoked correctly
+          }}
+          style={styles.micButton}
+        >
+          <Icon
+            name="microphone"
+            size={24}
+            color={isListening ? '#007bff' : '#555'}
+          />
         </TouchableOpacity>
       </View>
 
@@ -240,6 +242,27 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
     fontWeight: 'bold',
+  },
+  responseText: {
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  linkText: {
+    color: 'blue',  // Blue color for the clickable text
+    fontSize: 16,
+    textDecorationLine: 'underline',  // Optional: Adds an underline to make it look like a link
+    marginBottom: 10,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#333',
+    marginTop: 8,
+  },
+  sectionContainer: {
+    marginBottom: 16,
+  },
+  scrollView: {
+    margin: 10,
   },
 });
 
