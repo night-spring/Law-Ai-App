@@ -14,36 +14,7 @@ const Query = () => {
 
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    const initializeSpeechRecognition = async () => {
-      if (Platform.OS === 'android') {
-        try {
-          const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-            {
-              title: 'Microphone Permission',
-              message: 'This app needs access to your microphone to process voice queries.',
-              buttonNeutral: 'Ask Me Later',
-              buttonNegative: 'Cancel',
-              buttonPositive: 'OK',
-            }
-          );
-          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-            console.error('Microphone permission denied');
-            return;
-          }
-        } catch (err) {
-          console.error('Permission request failed:', err);
-        }
-      }
-    };
-
-    initializeSpeechRecognition();
-
-    return () => {
-      // Cleanup if necessary
-    };
-  }, []);
+ 
 
   const toggleDescription = (section) => {
     if (activeSection === section) {

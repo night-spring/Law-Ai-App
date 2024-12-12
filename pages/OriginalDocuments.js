@@ -87,6 +87,7 @@ const OriginalDocuments = () => {
   };
   return (
     <View style={styles.container}>
+      <Text>(Interet required for Downloading the PDFs)</Text>
       <TextInput
         style={styles.searchInput}
         placeholder="Search PDFs"
