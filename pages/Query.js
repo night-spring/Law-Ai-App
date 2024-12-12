@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Modal, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
 import Voice from 'react-native-voice'; // For voice recognition
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -7,19 +7,8 @@ const Query = () => {
   const [query, setQuery] = useState('');
   const [response, setResponse] = useState('Response will appear here...');
   const [isListening, setIsListening] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showPopup, setShowPopup] = useState(false); // Show popup after response
-  const [tagInput, setTagInput] = useState('');
-  const [caseData, setCaseData] = useState({
-    query: '',
-    caseHeading: '',
-    applicableArticles: '',
-    tags: [],
-    status: '',
-    description: '',
-  });
 
   useEffect(() => {
     Voice.onSpeechResults = (event) => {
@@ -54,7 +43,7 @@ const Query = () => {
     setError('');
 
     try {
-      const response = await fetch('https://sih-backend-seven.vercel.app/ai/', {
+      const response = await fetch('https://sih-backend-881i.onrender.com/encode/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,17 +52,7 @@ const Query = () => {
       });
 
       const data = await response.json();
-      setCaseData({
-        query,
-        caseHeading: data.caseHeading || 'Untitled Case',
-        applicableArticles: data.response || 'No applicable articles',
-        tags: [],
-      });
-
-      setResponse(data.response || 'No response received');
-
-      // Show popup after receiving a valid response
-      setShowPopup(true);
+      setResponse(data); // Display the entire response as it is
     } catch (error) {
       console.error('Error fetching the response:', error);
       setError('Error occurred while fetching the response');
@@ -81,319 +60,135 @@ const Query = () => {
     }
 
     setIsLoading(false);
-    setQuery('');
   };
 
-  const handleAddTag = () => {
-    if (tagInput.trim() && !caseData.tags.includes(tagInput.trim())) {
-      setCaseData((prevData) => ({
-        ...prevData,
-        tags: [...prevData.tags, tagInput.trim()],
-      }));
+  const renderResponse = (data) => {
+    if (!data) {
+      return <Text style={styles.responseText}>No data available</Text>;
     }
-    setTagInput('');
-  };
-
-  const handleRemoveTag = (index) => {
-    setCaseData((prevData) => ({
-      ...prevData,
-      tags: prevData.tags.filter((_, i) => i !== index),
-    }));
-  };
-
-  const handleSaveCase = async () => {
-    try {
-      const endpoint = 'https://sih-backend-seven.vercel.app/case_save/'; // Replace with your actual endpoint
-      const dataToSend = { ...caseData };
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToSend),
-      });
-
-      if (response.ok) {
-        Alert.alert('Case saved successfully!');
-        setIsModalOpen(false);  // Close modal after success
-        setShowPopup(false); // Close popup after saving
-      } else {
-        Alert.alert('Failed to save the case.');
-      }
-    } catch (error) {
-      Alert.alert('Error saving the case:', error);
+  
+    if (typeof data === 'object' && Array.isArray(data.acts)) {
+      return (
+        <View>
+          <Text style={styles.responseTitle}>Act: IPC</Text>
+          {data.acts.map((act, index) => (
+            <Text key={index} style={styles.responseText}>
+              Section {act}
+            </Text>
+          ))}
+        </View>
+      );
     }
+  
+    if (typeof data === 'object') {
+      return (
+        <Text style={styles.responseText}>
+          {JSON.stringify(data, null, 2)}
+        </Text>
+      );
+    }
+  
+    return <Text style={styles.responseText}>{data}</Text>;
   };
+  
+  return (
+    <View style={styles.container}>
+      {/* Response Box */}
+      <View style={styles.responseBox}>
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#007bff" />
+        ) : error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : (
+          renderResponse(response)
+        )}
+      </View>
 
-  const renderPopup = () => {
-    if (!showPopup) return null;
-
-    return (
-      <View style={styles.popupContainer}>
-        <TouchableOpacity
-          onPress={() => setIsModalOpen(true)} // Open modal to save case
-          style={styles.popup}
-        >
-          <Text style={styles.popupText}>New case identified! Click to review.</Text>
+      {/* Query Input with Mic */}
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          value={query}
+          onChangeText={handleInputChange}
+          placeholder="Type your query here..."
+          placeholderTextColor="#ccc"
+        />
+        <TouchableOpacity onPress={handleMicClick} style={styles.micButton}>
+          <Icon name="microphone" size={24} color={isListening ? '#007bff' : '#555'} />
         </TouchableOpacity>
       </View>
-    );
-  };
 
-  const renderModal = () => {
-    return (
-      <Modal visible={isModalOpen} animationType="slide" transparent={true}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Case to Database</Text>
-
-            {/* Query Field */}
-            <TextInput
-              value={caseData.query}
-              onChangeText={(text) => setCaseData({ ...caseData, query: text })}
-              style={styles.input}
-              placeholder="User Query"
-            />
-
-            {/* Case Heading Field */}
-            <TextInput
-              value={caseData.caseHeading}
-              onChangeText={(text) => setCaseData({ ...caseData, caseHeading: text })}
-              style={styles.input}
-              placeholder="Case Heading"
-            />
-
-            {/* Applicable Articles Field */}
-            <TextInput
-              value={caseData.applicableArticles}
-              onChangeText={(text) => setCaseData({ ...caseData, applicableArticles: text })}
-              style={styles.input}
-              placeholder="Applicable Articles"
-            />
-
-            {/* Status Field */}
-            <TextInput
-              value={caseData.status}
-              onChangeText={(text) => setCaseData({ ...caseData, status: text })}
-              style={styles.input}
-              placeholder="Status"
-            />
-
-            {/* Description Field */}
-            <TextInput
-              value={caseData.description}
-              onChangeText={(text) => setCaseData({ ...caseData, description: text })}
-              style={styles.input}
-              placeholder="Description"
-            />
-
-            {/* Save and Cancel Buttons */}
-            <View style={styles.modalButtons}>
-              <Button title="Cancel" onPress={() => setIsModalOpen(false)} />
-              <Button title="Save Case" onPress={handleSaveCase} />
-            </View>
-          </View>
-        </View>
-      </Modal>
-    );
-  };
-
-  return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.container}>
-        {/* Query Response Box */}
-        <View style={styles.queryResponseBox}>
-          {isLoading ? (
-            <Text style={styles.loadingText}>Loading...</Text>
-          ) : error ? (
-            <Text style={styles.errorText}>{error}</Text>
-          ) : (
-            <Text style={styles.responseText}>{response}</Text>
-          )}
-        </View>
-
-        {/* User input for query with microphone button */}
-        <View style={styles.queryContainer}>
-          <TextInput
-            style={styles.queryEntryBox}
-            value={query}
-            onChangeText={handleInputChange}
-            placeholder="Type your query here..."
-          />
-          <TouchableOpacity onPress={handleMicClick} style={styles.micButton}>
-            <Icon name="microphone" size={30} color={isListening ? 'green' : 'gray'} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Submit Button */}
-        <View style={styles.submitButtonContainer}>
-          <Button style={styles.submitButton} title="Submit" onPress={handleQuerySubmit} color="#007bff" />
-        </View>
-
-        {/* Render Popup after response */}
-        {renderPopup()}
-
-        {/* Case Information Modal */}
-        {isModalOpen && renderModal()}
-      </View>
-    </ScrollView>
+      {/* Submit Button */}
+      <TouchableOpacity onPress={handleQuerySubmit} style={styles.submitButton}>
+        <Text style={styles.submitButtonText}>Submit Query</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  // Add styles for the popup
-  popupContainer: {
-    position: 'fixed', // Change from 'absolute' to 'fixed'
-    top: 20, // Stick it to the top of the screen
-    left: 0,
-    right: 0,
-    bottom: 20,
-    backgroundColor: 'white',
-    padding: 10,
-    borderRadius: 10,
-    zIndex: 10, // Ensure the popup is on top
-  },
-  popup: {
-    backgroundColor: 'darkblue',
-    padding: 15,
-    borderColor: 'black',
-    borderRadius: 10,
-  },
-  popupText: {
-    color: '#fff',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  
-  
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   container: {
-    width: '90%',
+    flex: 1,
     padding: 20,
-    backgroundColor: '#ffffff',
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
-    marginVertical: 10, // Add some vertical spacing between cards
+    backgroundColor: '#f5f5f5',
   },
-  queryResponseBox: {
-    padding: 20,
-    marginBottom: 15,
-    backgroundColor: '#f9f9f9', // Light grey background
-    borderRadius: 12, // Rounded corners
-    borderWidth: 1,
-    borderColor: '#ddd', // Light border color
+  responseBox: {
+    flex: 1,
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
   },
   responseText: {
     fontSize: 16,
-    color: '#333', // Dark text color for readability
-    textAlign: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#007bff', // Blue color for loading
-    fontWeight: '500', // Slightly bolder
-    textAlign: 'center',
+    color: '#333',
   },
   errorText: {
     fontSize: 16,
-    color: '#d9534f', // Bootstrap red color
-    fontWeight: '500', // Slightly bolder
-    textAlign: 'center',
+    color: '#ff4d4f',
   },
-  queryContainer: {
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 25, // Increased space between input and button
-  },
-  queryEntryBox: {
-    flex: 1,
-    height: 45,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8, // Smoother input corners
-    paddingHorizontal: 15,
-    backgroundColor: '#f5f5f5', // Light grey background for input field
-    fontSize: 16, // Slightly larger font
-  },
-  micButton: {
-    marginLeft: 15,
-    padding: 10,
-    borderRadius: 500,
-    backgroundColor: 'white', // Mic button background color
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  submitButtonContainer: {
-    marginTop: 15,
-    borderRadius:20
-  },
-  submitButton:{
-borderRadius: 20,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Darker overlay
-  },
-  modalContent: {
-    width: '85%', // Slightly wider modal
-    padding: 25,
-    backgroundColor: '#ffffff',
-    borderRadius: 15, // Rounder modal corners
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 10,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600', // Slightly lighter than bold
     marginBottom: 20,
-    color: '#333', // Darker title color
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
   },
   input: {
-    height: 45,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 15,
-    borderRadius: 8,
-    paddingLeft: 15,
-    fontSize: 16,
-    backgroundColor: '#f5f5f5', // Light grey background
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20, // Added spacing between buttons and input fields
-  },
-  modalButton: {
     flex: 1,
-    marginHorizontal: 10,
-    paddingVertical: 12,
-    backgroundColor: '#007bff',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    color: '#ffffff',
     fontSize: 16,
-    fontWeight: '500',
+    color: '#333',
   },
-  cancelButton: {
-    backgroundColor: '#d9534f', // Red background for cancel button
+  micButton: {
+    marginLeft: 10,
   },
-  saveButton: {
-    backgroundColor: '#5bc0de', // Light blue for save button
+  submitButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  submitButtonText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 

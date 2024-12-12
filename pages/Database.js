@@ -18,7 +18,7 @@ const Database = () => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('https://sih-backend-seven.vercel.app/case_list/');
+      const response = await fetch('https://sih-backend-881i.onrender.com/case_list/');
       const data = await response.json();
       setCases(data.cases || []);
     } catch (error) {
@@ -116,7 +116,23 @@ const Database = () => {
                 </Text>
               </View>
               <Text style={styles.queryText}>{item.query}</Text>
-              <Text style={styles.tagsText}><Text style={styles.boldText}>Tags:</Text> {item.tags}</Text>
+              <View style={styles.modalDescription}>
+  <Text style={styles.boldText}>Tags: </Text>
+  <View style={styles.tagContainer}>
+    {item.tags
+      ? item.tags
+          .replace(/[\[\]']+/g, '') // Clean up the string if necessary
+          .split(',')
+          .map((tag, index) => (
+            <View key={index} style={styles.tagItem}>
+              <Text style={styles.tagText}>{tag.trim()}</Text>
+              
+            </View>
+          ))
+      : <Text>No tags available</Text>}
+  </View>
+</View>
+
               <View style={styles.cardFooter}>
                 <TouchableOpacity onPress={() => openCaseDetailsModal(item.id)}>
                   <Text style={styles.linkText}>Show Details</Text>
@@ -178,9 +194,24 @@ const Database = () => {
           </Text>
 
           <Text style={styles.modalDescription}>
-            <Text style={styles.boldText}>Tags: </Text>
-            {activeCase.tags}
-          </Text>
+  <Text style={styles.boldText}>Tags: </Text>
+</Text>
+
+<View style={styles.tagContainer}>
+  {activeCase.tags
+    ? activeCase.tags
+        .replace(/[\[\]']+/g, '') // Clean up the string if necessary
+        .split(',')
+        .map((tag, index) => (
+          <View key={index} style={styles.tagItem}>
+            <Text style={styles.tagText}>{tag.trim()}</Text>
+            <TouchableOpacity onPress={() => handleRemoveTag(index)}>
+              <Text style={styles.removeTag}>×</Text>
+            </TouchableOpacity>
+          </View>
+        ))
+    : <Text>No tags available</Text>}
+</View>
 
           <Text style={styles.modalDescription}>
   <Text style={styles.boldText}>Applicable Articles: </Text>
@@ -383,6 +414,33 @@ const styles = StyleSheet.create({
     borderColor: '#D1D5DB',
     padding: 8,
     marginTop: 4,
+  },
+  boldText: {
+    fontWeight: 'bold',
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 10,
+  },
+  tagItem: {
+    backgroundColor: '#E0FFFF', // Light blue background
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  tagText: {
+    color: '#00008B', // Darker blue/green for the text
+    fontSize: 14,
+  },
+  removeTag: {
+    color: 'red',
+    fontSize: 16,
+    marginLeft: 5,
   },
 });
 

@@ -129,8 +129,7 @@ const BareActs = () => {
       const searchText = searchQuery.toLowerCase();
       return (
         item.section_id.toLowerCase().includes(searchText) ||
-        item.section_title.toLowerCase().includes(searchText) ||
-        item.description.toLowerCase().includes(searchText)
+        item.section_title.toLowerCase().includes(searchText) 
       );
     });
   };
@@ -190,12 +189,13 @@ const BareActs = () => {
           <Text style={styles.bnsCardText}>MVA</Text>
         </TouchableOpacity>
         {/* Search Bar */}
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Search by Section ID, Title, or Description"
-        value={searchQuery}
-        onChangeText={(text) => setSearchQuery(text)}
-      />
+        <TextInput
+  style={[styles.searchBar, { marginBottom: 40 }]}
+  placeholder="Search by Section ID, Title, or Description"
+  value={searchQuery}
+  onChangeText={(text) => setSearchQuery(text)}
+/>
+
       </View>
 
       {/* Render Section Details */}
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   bnsCard: {
     backgroundColor: '#fff', // Set the background to white
     borderRadius: 15, // Rounded corners
-    padding: 20,
+    padding: 30,
     marginBottom: 20,
     shadowColor: '#000', // Shadow effect
     shadowOffset: { width: 0, height: 10 }, // Shadow below the card
@@ -332,9 +332,9 @@ const styles = StyleSheet.create({
     shadowRadius: 15, // Larger radius for the shadow
     elevation: 5, // Elevation for Android
     borderWidth: 2, // Blue border width
-    borderColor: '#2563EB', // Blue border color
-    height: 220, // Set height greater than width
-    width: 180, // Set width smaller than height
+    borderColor: '#00008B', // Blue border color
+    height: 160, // Set height greater than width
+    width: 175, // Set width smaller than height
     justifyContent: 'center', // Center content vertically
     alignItems: 'center', // Center content horizontally
   },
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   bnsCardText: {
     fontSize: 24, // Increased font size for larger text
     fontWeight: 'bold', // Bold text for emphasis
-    color: 'blue', // Blue text color
+    color: '#00008B', // Blue text color
     textAlign: 'center', // Center the text horizontally
   },
   detailsContainer: {
