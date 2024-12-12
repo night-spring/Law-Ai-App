@@ -191,7 +191,7 @@ const BareActs = () => {
         {/* Search Bar */}
         <TextInput
   style={[styles.searchBar, { marginBottom: 40 }]}
-  placeholder="Search by Section ID, Title, or Description"
+  placeholder="Search by Section ID or Title"
   value={searchQuery}
   onChangeText={(text) => setSearchQuery(text)}
 />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, ActivityIndicator, TouchableOpacity, StyleSheet,ScrollView,Button } from 'react-native';
 import Voice from 'react-native-voice'; // For voice recognition
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -7,12 +7,49 @@ const Query = () => {
   const [query, setQuery] = useState('');
   const [response, setResponse] = useState('Response will appear here...');
   const [isListening, setIsListening] = useState(false);
+  const [showDescriptions, setShowDescriptions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
 
   useEffect(() => {
+    const initializeVoice = async () => {
+      try {
+        if (Platform.OS === 'android') {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+            {
+              title: 'Microphone Permission',
+              message: 'This app needs access to your microphone to process voice queries.',
+              buttonNeutral: 'Ask Me Later',
+              buttonNegative: 'Cancel',
+              buttonPositive: 'OK',
+            }
+          );
+          if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+            console.error('Microphone permission denied');
+          }
+        }
+      } catch (err) {
+        console.error('Permission request failed:', err);
+      }
+    };
+
+    initializeVoice();
+
+    Voice.onSpeechStart = () => {
+      console.log('Speech recognition started');
+    };
+
+    Voice.onSpeechEnd = () => {
+      console.log('Speech recognition ended');
+      setIsListening(false);
+    };
+
     Voice.onSpeechResults = (event) => {
-      setQuery(event.value[0]);
+      if (event.value && event.value.length > 0) {
+        setQuery(event.value[0]);
+      }
     };
 
     Voice.onSpeechError = (event) => {
@@ -24,6 +61,9 @@ const Query = () => {
       Voice.destroy().then(Voice.removeAllListeners);
     };
   }, []);
+  const toggleDescriptions = () => {
+    setShowDescriptions((prev) => !prev);
+  };
 
   const handleMicClick = () => {
     if (isListening) {
@@ -40,7 +80,7 @@ const Query = () => {
 
   const handleQuerySubmit = async () => {
     setIsLoading(true);
-    setError('');
+    setError('');     
 
     try {
       const response = await fetch('https://sih-backend-881i.onrender.com/encode/', {
@@ -63,37 +103,47 @@ const Query = () => {
   };
 
   const renderResponse = (data) => {
+  
     if (!data) {
       return <Text style={styles.responseText}>No data available</Text>;
     }
   
-    if (typeof data === 'object' && Array.isArray(data.acts)) {
+    const toggleDescriptions = () => {
+      setShowDescriptions((prev) => !prev);
+    };
+  
+    if (typeof data === 'object' && typeof data.acts === 'object') {
       return (
         <View>
           <Text style={styles.responseTitle}>Act: IPC</Text>
-          {data.acts.map((act, index) => (
-            <Text key={index} style={styles.responseText}>
-              Section {act}
-            </Text>
-          ))}
+          <Button
+            title={showDescriptions ? "Hide Descriptions" : "Show Descriptions"}
+            onPress={toggleDescriptions}
+          />
+          <ScrollView style={styles.scrollView}>
+            {Object.entries(data.acts).map(([section, description], index) => (
+              <View key={index} style={styles.sectionContainer}>
+                <Text style={styles.responseText}>Section {section}</Text>
+                {showDescriptions && (
+                  <Text style={styles.descriptionText}>{description}</Text>
+                )}
+              </View>
+            ))}
+          </ScrollView>
         </View>
       );
     }
   
-    if (typeof data === 'object') {
-      return (
-        <Text style={styles.responseText}>
-          {JSON.stringify(data, null, 2)}
-        </Text>
-      );
-    }
-  
-    return <Text style={styles.responseText}>{data}</Text>;
+    return (
+      <Text style={styles.responseText}>
+        {JSON.stringify(data, null, 2)}
+      </Text>
+    );
   };
   
   return (
     <View style={styles.container}>
-      {/* Response Box */}
+      <ScrollView style={styles.responseContainer}>
       <View style={styles.responseBox}>
         {isLoading ? (
           <ActivityIndicator size="large" color="#007bff" />
@@ -103,6 +153,7 @@ const Query = () => {
           renderResponse(response)
         )}
       </View>
+    </ScrollView>
 
       {/* Query Input with Mic */}
       <View style={styles.inputContainer}>
