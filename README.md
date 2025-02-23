@@ -1,1 +1,1 @@
-# SIH_APP
+# React Native Application
